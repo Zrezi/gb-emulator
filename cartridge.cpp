@@ -105,16 +105,16 @@ uint8_t Cartridge::load_rom(const char *filepath)
 			ram_size = 0x0;
 			break;
 		case 0x01:
-            ram_size = 0x800; // 2 kB
-            break;
-        case 0x02:
-            ram_size = 0x2000; // 8 kB
-            break;
-        case 0x03:
-            ram_size = 0x8000; // 32 kB
-            break;
-        case 0x04:
-            ram_size = 0x20000; // 128 kB
+			ram_size = 0x800; // 2 kB
+			break;
+		case 0x02:
+			ram_size = 0x2000; // 8 kB
+			break;
+		case 0x03:
+			ram_size = 0x8000; // 32 kB
+			break;
+		case 0x04:
+			ram_size = 0x20000; // 128 kB
 			break;
 	}
 	if (type->base_type == BASE_TYPE_ROM)
@@ -161,7 +161,8 @@ uint8_t Cartridge::load_rom(const char *filepath)
 	
 	// Close the file
 	fclose(f);
-	
+	loaded = 0x01;
+
 	return 1;
 }
 
@@ -245,22 +246,7 @@ uint8_t Cartridge::is_sgb(void)
 	return sgb_mode;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+uint8_t Cartridge::is_loaded(void)
+{
+	return loaded;
+}

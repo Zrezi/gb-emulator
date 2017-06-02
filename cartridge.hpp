@@ -52,6 +52,8 @@ private:
 	uint8_t rtc_halt;
 	uint32_t rtc_halt_time;
 
+	uint8_t loaded;
+
 public:
 	Cartridge();
 	~Cartridge();
@@ -81,6 +83,8 @@ public:
 	
 	uint32_t get_rtc_latch(void);
 	void set_rtc_latch(uint32_t time);
+
+	uint8_t is_loaded(void);
 };
 
 #endif

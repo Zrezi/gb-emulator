@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "cartridge.hpp"
+#include "memorymap.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -9,11 +9,13 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	Cartridge *c = new Cartridge();
+	MemoryMap *m = new MemoryMap();
 
-	c->load_rom(argv[1]);
+	m->get_cartridge()->load_rom(argv[1]);
 
-	delete c;
+	m->power_up();
+
+	delete m;
 
 	return 0;
 }
