@@ -9,7 +9,7 @@ struct cartridge_size_t {
 	uint16_t number_of_banks;
 };
 
-extern CartridgeSize cartridge_sizes[0x0B];
+extern struct cartridge_size_t cartridge_sizes[0x0B];
 
 cartridge_size_t *get_cartridge_size_by_byte(uint8_t byte);
 

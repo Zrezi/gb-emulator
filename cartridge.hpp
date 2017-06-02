@@ -4,6 +4,9 @@
 #include <string>
 #include <stdint.h>
 
+#include "cartridgesize.hpp"
+#include "cartridgetype.hpp"
+
 #define ROM_OFFSET_NAME 0x134
 #define ROM_OFFSET_CGBMODE 0x143
 #define ROM_OFFSET_SGBMODE 0x146
@@ -21,7 +24,7 @@
 class Cartridge
 {
 private:
-	const char name[17];
+	char name[17];
 
 	cartridge_type_t *type;
 	cartridge_size_t *size;
@@ -66,7 +69,7 @@ public:
 
 	void set_to_rom_mode(void);
 	void set_to_ram_mode(void);
-	void is_rom_mode(void);
+	uint8_t is_rom_mode(void);
 
 	uint8_t get_current_rom_bank(void);
 	void set_current_rom_bank(uint8_t bank);
@@ -78,6 +81,6 @@ public:
 	
 	uint32_t get_rtc_latch(void);
 	void set_rtc_latch(uint32_t time);
-}
+};
 
 #endif

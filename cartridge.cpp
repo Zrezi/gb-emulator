@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "cartridge.hpp"
-#include "cartridgesize.hpp"
-#include "cartridgetype.hpp"
+#include "config.hpp"
 
 Cartridge::Cartridge()
 {
@@ -13,13 +13,22 @@ Cartridge::Cartridge()
 
 Cartridge::~Cartridge()
 {
-	delete[] ram;
-	uint16_t i;
-	for (i = 0; i < size->number_of_banks; i++)
+	if (ram)
 	{
-		delete[] rom_banks[i];
+		delete[] ram;
 	}
-	delete[] rom_banks;
+	if (rom_banks)
+	{
+		uint16_t i;
+		for (i = 0; i < size->number_of_banks; i++)
+		{
+			if (rom_banks[i])
+			{
+				delete[] rom_banks[i];
+			}
+		}
+		delete[] rom_banks;
+	}
 }
 
 uint8_t Cartridge::load_rom(const char *filepath)
@@ -37,21 +46,18 @@ uint8_t Cartridge::load_rom(const char *filepath)
 	}
 
 	// Calculate the length of the file, create a byte array, and read the entire file into that array
+	fseek(f, 0, SEEK_END);
 	length = ftell(f);
+	printf("SIZE: %.1f kB (%d B)\n", (length / 1000.0), length);
+
+	fseek(f, 0, SEEK_SET);
 	uint8_t data[length];
 	fread(data, length, 1, f);
 
 	// Determine the name of the ROM
 	memset(name, '\0', 17);
 	for(i = 0; i < 16; i++) {
-		if (data[i + ROM_OFFSET_NAME] == 0x80 || data[i + ROM_OFFSET_NAME] == 0xC0)
-		{
-			name[i] = '\0';
-		}
-		else
-		{
-			name[i] = data[i + ROM_OFFSET_NAME];
-		}
+		name[i] = data[i + ROM_OFFSET_NAME];
 	}
 	printf("ROM Name: %s\n", name);
 		
@@ -71,11 +77,11 @@ uint8_t Cartridge::load_rom(const char *filepath)
 	type = get_cartridge_type_by_byte(data[ROM_OFFSET_TYPE]);
 	if (type)
 	{
-		printf("ROM Type: %s\n", type->name);
+		printf("ROM Type: %s (0x%02x)\n", type->name, data[ROM_OFFSET_TYPE]);
 	}
 	else
 	{
-		printf("Unknown ROM Type: 0x%02X\n", data[ROM_OFFSET_TYPE]);
+		printf("Unknown ROM Type Byte: 0x%02X\n", data[ROM_OFFSET_TYPE]);
 		return 0;
 	}
 	
@@ -84,10 +90,11 @@ uint8_t Cartridge::load_rom(const char *filepath)
 	if (size)
 	{
 		printf("RAM Banks: %d\n", size->number_of_banks);
+		printf("RAM Info: %s\n", size->name);
 	}
 	else
 	{
-		printf("Unknown RAM\n");
+		printf("Unknown RAM Bank Size Byte: 0x%02X\n", data[ROM_OFFSET_ROM_SIZE]);
 		return 0;
 	}
 	
@@ -118,7 +125,7 @@ uint8_t Cartridge::load_rom(const char *filepath)
 	{
 		ram_size = 0x200;
 	}	
-	printf("RAM Size: 0x%08x\n", ram_size);
+	printf("RAM Size: 0x%05x\n", ram_size);
 
 	// Dynamically allocate space for the ram
 	ram = new uint8_t[ram_size];
@@ -130,7 +137,7 @@ uint8_t Cartridge::load_rom(const char *filepath)
 	current_ram_bank = 0x00;
 
 	// Dynamically allocate space for the rom banks
-	rom_banks = new uint8_t[size->number_of_banks];
+	rom_banks = new uint8_t*[size->number_of_banks];
 	for (i = 0; i < size->number_of_banks; i++)
 	{
 		rom_banks[i] = new uint8_t[0x4000];
@@ -163,12 +170,12 @@ uint8_t Cartridge::read_rom(uint8_t rom_bank_number, uint16_t address)
 	return rom_banks[rom_bank_number][address];
 }
 
-void Cartridge::write_rom(uint8_t rom_bank_number, uint16_t address, uint8_t value);
+void Cartridge::write_rom(uint8_t rom_bank_number, uint16_t address, uint8_t value)
 {
 	rom_banks[rom_bank_number][address] = value;
 }
 
-uint8_t Cartridge::read_ram(uint16_t address);
+uint8_t Cartridge::read_ram(uint16_t address)
 {
 	return ram[address];
 }
