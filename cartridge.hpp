@@ -64,6 +64,8 @@ public:
 	void write_rom(uint8_t rom_bank_number, uint16_t address, uint8_t value);
 	uint8_t read_ram(uint16_t address);
 	void write_ram(uint16_t address, uint8_t value);
+	
+	cartridge_type_t *get_type(void);
 
 	void enable_ram(void);
 	void disable_ram(void);
@@ -81,8 +83,22 @@ public:
 	uint8_t is_cgb(void);
 	uint8_t is_sgb(void);
 	
+	void enable_rtc_latch(void);
+	void disable_rtc_latch(void);
 	uint32_t get_rtc_latch(void);
+	uint32_t get_rtc_latch_seconds(void);
+	void set_rtc_latch_seconds(uint32_t seconds);
+	uint32_t get_rtc_latch_minutes(void);
+	void set_rtc_latch_minutes(uint32_t minutes);
+	uint32_t get_rtc_latch_hours(void);
+	void set_rtc_latch_hours(uint32_t hours);
+	uint32_t get_rtc_latch_days(void);
+	void set_rtc_latch_days(uint32_t days);
 	void set_rtc_latch(uint32_t time);
+	
+	uint8_t set_rtc_carry(uint8_t carry);
+	uint8_t set_rtc_halt(uint8_t halt);
+	uint8_t is_rtc_halt(void);
 
 	uint8_t is_loaded(void);
 };

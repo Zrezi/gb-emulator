@@ -186,6 +186,11 @@ void Cartridge::write_ram(uint16_t address, uint8_t value)
 	ram[address] = value;
 }
 
+cartridge_type_t *get_type(void)
+{
+	return type;
+}
+
 void Cartridge::enable_ram(void)
 {
 	ram_enabled = 0x01;
@@ -236,7 +241,98 @@ void Cartridge::set_current_ram_bank(uint8_t bank)
 	current_ram_bank = bank;
 }
 
-uint8_t Cartridge::is_cgb(void)
+uint32_t Cartridge::get_rtc_latch(void)
+{
+	uint32_t time = 0x0;
+	time += (1000 * rtc_latch_seconds);
+	time += (1000 * 60 * rtc_latch_minutes);
+	time += (1000 * 60 * 60 * rtc_latch_hours);
+	time += (1000 * 60 * 60 * 24 * rtc_latch_days);
+	if (rtc_carry)
+	{
+		time += (1000 * 60 * 60 * 24 * 511);
+	}
+	return time;
+}
+
+void Cartridge::set_rtc_latch(uint32_t time)
+{
+	printf("check rtc latch if implemented correct\n");
+	rtc_latch_seconds = (time / (1000)) % 60;
+	rtc_latch_minutes = (time / (1000 * 60)) % 60;
+	rtc_latch_hours = (time / (1000 * 60 * 60)) % 24;
+	rtc_latch_days = (time / (1000 * 60 * 60 * 24));
+	rtc_carry = rtc_latch_days > 0x1FF;
+	rtc_latch_days %= 0x200;
+}
+
+void Cartridge::enable_rtc_latch(void)
+{
+	rtc_latch_enabled = 0x01;
+}
+
+void Cartridge::disable_rtc_latch(void)
+{
+	rtc_latch_enabled = 0x00;
+}
+
+uint32_t Cartridge::get_rtc_latch_seconds(void)
+{
+	return rtc_latch_seconds;
+}
+
+void Cartridge::set_rtc_latch_seconds(uint32_t seconds)
+{
+	rtc_latch_seconds = seconds;
+}
+
+uint32_t Cartridge::get_rtc_latch_minutes(void)
+{
+	return rtc_latch_minutes;
+}
+
+void Cartridge::set_rtc_latch_minutes(uint32_t minutes)
+{
+	rtc_latch_minutes = minutes;
+}
+
+uint32_t Cartridge::get_rtc_latch_hours(void)
+{
+	return rtc_latch_hours;
+}
+
+void Cartridge::set_rtc_latch_hours(uint32_t hours)
+{
+	rtc_latch_hours = hours;
+}
+
+uint32_t Cartridge::get_rtc_latch_days(void)
+{
+	return rtc_latch_days;
+}
+
+void Cartridge::set_rtc_latch_days(uint32_t days)
+{
+	rtc_latch_days = days;
+	rtc_carry = (rtc_latch_days > 0x1FF);
+}
+	
+uint8_t Cartridge::set_rtc_carry(uint8_t carry)
+{
+	rtc_carry = carry;
+}
+
+uint8_t Cartridge::set_rtc_halt(uint8_t halt)
+{
+	rtc_halt = halt;
+}
+
+uint8_t Cartridge::is_rtc_halt(void)
+{
+	return rtc_halt;
+}
+
+uint8_t Cartridge::Cartridge::is_cgb(void)
 {
 	return cgb_mode;
 }
