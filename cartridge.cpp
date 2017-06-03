@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "cartridge.hpp"
+#include "cartridgetype.hpp"
 #include "config.hpp"
 
 Cartridge::Cartridge()
@@ -186,7 +187,7 @@ void Cartridge::write_ram(uint16_t address, uint8_t value)
 	ram[address] = value;
 }
 
-cartridge_type_t *get_type(void)
+cartridge_type_t *Cartridge::get_type(void)
 {
 	return type;
 }
@@ -317,14 +318,19 @@ void Cartridge::set_rtc_latch_days(uint32_t days)
 	rtc_carry = (rtc_latch_days > 0x1FF);
 }
 	
-uint8_t Cartridge::set_rtc_carry(uint8_t carry)
+void Cartridge::set_rtc_carry(uint8_t carry)
 {
 	rtc_carry = carry;
 }
 
-uint8_t Cartridge::set_rtc_halt(uint8_t halt)
+void Cartridge::set_rtc_halt(uint8_t halt)
 {
 	rtc_halt = halt;
+}
+
+void Cartridge::set_rtc_halt_time(uint32_t halt_time)
+{
+	rtc_halt_time = halt_time;
 }
 
 uint8_t Cartridge::is_rtc_halt(void)

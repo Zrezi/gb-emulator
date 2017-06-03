@@ -106,7 +106,7 @@ uint8_t MemoryMap::read_byte(uint16_t address)
 		case 0x2000:
 		case 0x3000:
 			value = cartridge->read_rom(0, address);
-			break
+			break;
 		case 0x4000:
 		case 0x5000:
 		case 0x6000:
@@ -185,7 +185,7 @@ uint8_t MemoryMap::read_byte(uint16_t address)
 			}
 			else if (address < 0xFEA0)
 			{
-				value = oam[address - 0xFE00);
+				value = oam[address - 0xFE00];
 			}
 			else if (address < 0xFF00)
 			{
@@ -233,6 +233,7 @@ uint8_t MemoryMap::read_byte(uint16_t address)
 
 void MemoryMap::write_byte(uint16_t address, uint8_t value)
 {
+	uint8_t is_halt = 0, should_screen_be_on = 0, io_addr = 0; // for use in switch
 	switch (address & 0xF000)
 	{
 		case 0x0000:
@@ -377,7 +378,7 @@ void MemoryMap::write_byte(uint16_t address, uint8_t value)
 			{
 				return;
 			}
-			switch (cartridge->get_type()->base_type())
+			switch (cartridge->get_type()->base_type)
 			{
 				case BASE_TYPE_ROM:
 					cartridge->write_ram((address - 0xA000), value);
@@ -415,7 +416,7 @@ void MemoryMap::write_byte(uint16_t address, uint8_t value)
 							break;
 						case 0x0C:
 							cartridge->set_rtc_latch_days((cartridge->get_rtc_latch_days() & 0x00FF) | ((value & 0x01) << 8));
-							uint8_t is_halt = ((value & 0x40) == 0x40);
+							is_halt = ((value & 0x40) == 0x40);
 							cartridge->set_rtc_carry((value & 0x80) == 0x80);
 							if (is_halt)
 							{
@@ -423,7 +424,7 @@ void MemoryMap::write_byte(uint16_t address, uint8_t value)
 							}
 							if (cartridge->is_rtc_halt() && !is_halt)
 							{
-								uint32_t halt_time = cartridge->get_rtc_latch() - cartridge->get_rtc_halt_time();
+								//uint32_t halt_time = cartridge->get_rtc_latch() - cartridge->get_rtc_halt_time();
 								// TODO
 								// cart.getStartTime().setTimeInMillis(cart.getStartTime().getTimeInMillis() + haltTime);
 							}
@@ -463,7 +464,7 @@ void MemoryMap::write_byte(uint16_t address, uint8_t value)
 			}
 			else if (address < 0xFF80)
 			{
-				uint8_t io_addr = (address - 0xFF00);
+				io_addr = (address - 0xFF00);
 				if (io_addr == SB)
 				{
 					//
@@ -496,16 +497,18 @@ void MemoryMap::write_byte(uint16_t address, uint8_t value)
 				}
 				if (io_addr == LCDC)
 				{
-					uint8_t should_screen_be_on = (value & 0x80) == 0x80;
-					if (!is_screen_on() && should_screen_be_on)
+					if (((value & 0x80) == 0x80))
+					{
+						should_screen_be_on = 1;
+					}
+					if (is_screen_on() && !should_screen_be_on)
 					{
 						io[LY] = 0x00;
 						io[STAT] &= ~0x03;
 						
-						// TODO
 						check_lyc();
 					}
-					else if(~is_screen_on() && should_screen_be_on)
+					else if(!is_screen_on() && should_screen_be_on == 1)
 					{
 						// reset lcdmodetimer?
 					}
@@ -513,10 +516,10 @@ void MemoryMap::write_byte(uint16_t address, uint8_t value)
 				if (io_addr == DMA)
 				{
 					uint8_t i;
-					for (int i = 0x00; i < 0x80; i++) {
+					for (i = 0x00; i < 0x80; i++) {
 						uint16_t temp_addr = 0x0000;
 						temp_addr |= (value << 8);
-						tmep_addr |= i;
+						temp_addr |= i;
                         oam[i] = read_byte(temp_addr);
                         update_sprite(i, oam[i]);
 					}
@@ -525,14 +528,14 @@ void MemoryMap::write_byte(uint16_t address, uint8_t value)
 				{
 					current_vram_bank = value & 0x01;
 				}
-				if (io_addr == HMDA5 && cartridge->is_cgb())
+				if (io_addr == HDMA5 && cartridge->is_cgb())
 				{
 					// TODO A LOT OF STUFF
 				}
 				if (address - 0xFF00 == BGPD)
 				{
 					bg_palette[io[BGPI] & 0x3F] = value;
-					if (io[BGPI] & 0x80 == 0x80)
+					if ((io[BGPI] & 0x80) == 0x80)
 					{
 						io[BGPI]++;
 						io[BGPI] &= ~0x40;
@@ -541,7 +544,7 @@ void MemoryMap::write_byte(uint16_t address, uint8_t value)
 				if (address - 0xFF00 == OBPD)
 				{
 					ob_palette[io[OBPI] & 0x3F] = value;
-					if (io[OBPI] & 0x80 == 0x80)
+					if ((io[OBPI] & 0x80) == 0x80)
 					{
 						io[OBPI]++;
 						io[OBPI] &= ~0x40;
@@ -577,63 +580,9 @@ Cartridge *MemoryMap::get_cartridge(void)
 	return cartridge;
 }
 
-/*
-	Since we know all sprites take 4 bytes of data, we can bitshift the address right twice to ignore the
-	lower 2 bits. Now checking the lower two bits (which started as bits 2 and 3) allows us to
-	calculate an index easily (since it's a multiple of 4)
-	
-	once we have our index, we can loop thru a for loop with i checking against all of our sprites,
-	stopping when we have a match
-	
-	bitwise and-ing the original address with 0x03 gives us 4 different values to edit, which are:
-	00 = y position
-	01 = x position
-	10 = pattern number
-	11 = flags
-		bit 7 = priority
-		bit 6 = y flip
-		bit 5 = x flip
-		bit 4 = palette number
-			0 = take from obj0
-			1 = take from obj1
-		bit 3 = ignored
-		bit 2 = ignored
-		bit 1 = ignored
-		bit 0 = ignored
-	
-	sprite information starts on page 25
-*/
-void MemoryMap::update_sprite(uint16_t address, uint8_t value)
-{
-	uint16_t index = address >> 2;
-	uint8_t i;
-	for (i = 0; i < 0x28; i++)
-	{
-		if (sprites[i]->get_index() == index)
-		{
-			break;
-		}
-	}
-	switch (address & 0x03)
-	{
-		case 0x00:
-			sprites[i]->set_y(value);
-			break;
-		case 0x01:
-			sprites[i]->set_x(value);
-			break;
-		case 0x02:
-			sprites[i]->set_tile_number(value);
-			break;
-		case 0x03:
-			sprites[i]->set_attribute_flags(value);
-			break;
-	}
-}
-
 uint8_t MemoryMap::is_screen_on(void)
 {
-	return (io[LDC] & 0x80) == 0x80;
+	return ((io[LCDC] & 0x80) == 0x80);
 }
 
 /*
@@ -643,12 +592,12 @@ uint8_t MemoryMap::is_screen_on(void)
 */
 uint8_t MemoryMap::is_interrupt_triggered(void)
 {
-	return (IE & io[IF]) != 0x00;
+	return ((IE & io[IF]) != 0x00);
 }
 
 uint8_t MemoryMap::is_interrupt_enabled(interrupt_t *interrupt)
 {
-	return (IE & interrupt->mask) == interrupt->mask;
+	return ((IE & interrupt->mask) == interrupt->mask);
 }
 
 /*
@@ -664,7 +613,7 @@ uint8_t MemoryMap::is_interrupt_enabled(interrupt_t *interrupt)
 */
 uint8_t MemoryMap::is_interrupt_set(interrupt_t *interrupt)
 {
-	return (io[IF] & interrupt->mask) == interrupt->mask;
+	return ((io[IF] & interrupt->mask) == interrupt->mask);
 }
 
 /*
@@ -687,6 +636,11 @@ void MemoryMap::set_interrupt(interrupt_t *interrupt)
 void MemoryMap::disable_interrupt(interrupt_t *interrupt)
 {
 	io[IF] &= ~interrupt->mask;
+}
+
+uint8_t MemoryMap::is_lcd_interrupt_enabled(lcd_interrupt_t *interrupt)
+{
+	return ((io[STAT] & interrupt->mask) == interrupt->mask);
 }
 
 void MemoryMap::increment_div_timer(uint8_t cycles)
@@ -811,7 +765,7 @@ uint8_t MemoryMap::is_window_display_enabled(void)
 */
 uint16_t MemoryMap::get_window_tilemap_address()
 {
-	if ((io[LCDC] & 0x40 == 0x00)
+	if ((io[LCDC] & 0x40) == 0x00)
 	{
 		return 0x1800;
 	}
@@ -827,7 +781,7 @@ uint16_t MemoryMap::get_window_tilemap_address()
 */
 uint16_t MemoryMap::get_background_tilemap_address()
 {
-	if ((io[LCDC] & 0x08 == 0x00)
+	if ((io[LCDC] & 0x08) == 0x00)
 	{
 		return 0x1800;
 	}
@@ -955,7 +909,77 @@ uint8_t MemoryMap::obp1(void)
 	return io[OBP1];
 }
 
-Sprite *MemoryMap::get_sprites(void)
+void MemoryMap::check_lyc(void)
+{
+	if (io[LY] == io[LYC])
+	{
+		io[STAT] |= 0x04;
+		if (is_lcd_interrupt_enabled(get_lcd_interrupt_by_index(LCD_INTERRUPT_LYC_LY)) && is_screen_on())
+		{
+			set_interrupt(get_interrupt_by_index(INTERRUPT_LCDSTAT));
+		}
+	}
+	else
+	{
+		io[STAT] &= ~0x04;
+	}
+}
+
+/*
+	Since we know all sprites take 4 bytes of data, we can bitshift the address right twice to ignore the
+	lower 2 bits. Now checking the lower two bits (which started as bits 2 and 3) allows us to
+	calculate an index easily (since it's a multiple of 4)
+	
+	once we have our index, we can loop thru a for loop with i checking against all of our sprites,
+	stopping when we have a match
+	
+	bitwise and-ing the original address with 0x03 gives us 4 different values to edit, which are:
+	00 = y position
+	01 = x position
+	10 = pattern number
+	11 = flags
+		bit 7 = priority
+		bit 6 = y flip
+		bit 5 = x flip
+		bit 4 = palette number
+			0 = take from obj0
+			1 = take from obj1
+		bit 3 = ignored
+		bit 2 = ignored
+		bit 1 = ignored
+		bit 0 = ignored
+	
+	sprite information starts on page 25
+*/
+void MemoryMap::update_sprite(uint16_t address, uint8_t value)
+{
+	uint16_t index = address >> 2;
+	uint8_t i;
+	for (i = 0; i < 0x28; i++)
+	{
+		if (sprites[i]->get_index() == index)
+		{
+			break;
+		}
+	}
+	switch (address & 0x03)
+	{
+		case 0x00:
+			sprites[i]->set_y(value);
+			break;
+		case 0x01:
+			sprites[i]->set_x(value);
+			break;
+		case 0x02:
+			sprites[i]->set_tile_number(value);
+			break;
+		case 0x03:
+			sprites[i]->set_attribute_flags(value);
+			break;
+	}
+}
+
+Sprite **MemoryMap::get_sprites(void)
 {
 	return sprites;
 }

@@ -6,6 +6,7 @@
 #include "sprite.hpp"
 #include "cartridge.hpp"
 #include "interrupt.hpp"
+#include "lcdinterrupt.hpp"
 
 #define DIV_RATE    0x100 // 256
 #define MAX_SPRITES 0x28  // 40
@@ -109,6 +110,8 @@ public:
 	uint8_t is_interrupt_set(interrupt_t *interrupt);
 	void set_interrupt(interrupt_t *interrupt);
 	void disable_interrupt(interrupt_t *interrupt);
+
+	uint8_t is_lcd_interrupt_enabled(lcd_interrupt_t *interrupt);
 	
 	void increment_div_timer(uint8_t cycles);
 	void increment_div(void);
@@ -138,8 +141,10 @@ public:
 	uint8_t bgp(void);
 	uint8_t obp0(void);
 	uint8_t obp1(void);
+	void check_lyc(void);
 	
-	Sprite *get_sprites(void);
+	void update_sprite(uint16_t address, uint8_t value);
+	Sprite **get_sprites(void);
 	
 	/*
 	void key_press(???);

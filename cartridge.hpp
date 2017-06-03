@@ -96,8 +96,10 @@ public:
 	void set_rtc_latch_days(uint32_t days);
 	void set_rtc_latch(uint32_t time);
 	
-	uint8_t set_rtc_carry(uint8_t carry);
-	uint8_t set_rtc_halt(uint8_t halt);
+	void set_rtc_carry(uint8_t carry);
+	void set_rtc_halt(uint8_t halt);
+	void set_rtc_halt_time(uint32_t halt_time);
+
 	uint8_t is_rtc_halt(void);
 
 	uint8_t is_loaded(void);
