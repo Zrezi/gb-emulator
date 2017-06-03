@@ -8,7 +8,7 @@ CXXFLAGS = -Wall -ggdb -std=c++11
 LDFLAGS = 
 
 BIN = main
-OBJS = main.o cartridge.o cartridgesize.o cartridgetype.o memorymap.o input.o interrupt.o lcdinterrupt.o sprite.o
+OBJS = main.o cartridge.o cartridgesize.o cartridgetype.o memorymap.o input.o interrupt.o lcdinterrupt.o sprite.o z80.o
 
 all: $(BIN)
 

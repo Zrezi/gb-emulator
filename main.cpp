@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "memorymap.hpp"
+#include "z80.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -9,13 +9,18 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	MemoryMap *m = new MemoryMap();
+	/*MemoryMap *m = new MemoryMap();
 
 	m->get_cartridge()->load_rom(argv[1]);
 
 	m->power_up();
 
-	delete m;
+	delete m;*/
+
+	Z80 *z = new Z80();
+	z->get_memory()->get_cartridge()->load_rom(argv[1]);
+	z->init();
+	delete z;
 
 	return 0;
 }
