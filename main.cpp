@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include "z80.hpp"
 
+void shutdown()
+{
+	exit(0);
+}
+
 int main(int argc, char *argv[])
 {
 	if (argc == 1)

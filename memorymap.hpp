@@ -100,18 +100,20 @@ public:
 	void power_up(void);
 
 	uint8_t read_byte(uint16_t address);
+	uint16_t read_short(uint16_t address);
 	void write_byte(uint16_t address, uint8_t value);
+	void write_short(uint16_t address, uint16_t value);
 
 	Cartridge *get_cartridge(void);
 	uint8_t is_screen_on(void);
 
 	uint8_t is_interrupt_triggered(void);
-	uint8_t is_interrupt_enabled(interrupt_t *interrupt);
-	uint8_t is_interrupt_set(interrupt_t *interrupt);
-	void set_interrupt(interrupt_t *interrupt);
-	void disable_interrupt(interrupt_t *interrupt);
+	uint8_t is_interrupt_enabled(const interrupt_t *interrupt);
+	uint8_t is_interrupt_set(const interrupt_t *interrupt);
+	void set_interrupt(const interrupt_t *interrupt);
+	void disable_interrupt(const interrupt_t *interrupt);
 
-	uint8_t is_lcd_interrupt_enabled(lcd_interrupt_t *interrupt);
+	uint8_t is_lcd_interrupt_enabled(const lcd_interrupt_t *interrupt);
 	
 	void increment_div_timer(uint8_t cycles);
 	void increment_div(void);

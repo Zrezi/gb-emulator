@@ -14,8 +14,8 @@ struct lcd_interrupt_t
 	uint8_t mask;
 };
 
-extern struct lcd_interrupt_t lcd_interrupts[0x04];
+extern const struct lcd_interrupt_t lcd_interrupts[0x04];
 
-lcd_interrupt_t *get_lcd_interrupt_by_index(uint8_t index);
+const lcd_interrupt_t *get_lcd_interrupt_by_index(uint8_t index);
 
 #endif

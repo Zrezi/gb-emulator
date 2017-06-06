@@ -231,6 +231,11 @@ uint8_t MemoryMap::read_byte(uint16_t address)
 	return value;
 }
 
+uint16_t MemoryMap::read_short(uint16_t address)
+{
+	return (read_byte(address)) | (read_byte(address + 1) << 8);
+}
+
 void MemoryMap::write_byte(uint16_t address, uint8_t value)
 {
 	uint8_t is_halt = 0, should_screen_be_on = 0, io_addr = 0; // for use in switch
@@ -575,6 +580,12 @@ void MemoryMap::write_byte(uint16_t address, uint8_t value)
 	}
 }
 
+void MemoryMap::write_short(uint16_t address, uint16_t value)
+{
+	write_byte(address, (uint8_t) (value & 0x00FF));
+	write_byte(address + 1, (uint8_t) ((value & 0xFF00) >> 8));
+}
+
 Cartridge *MemoryMap::get_cartridge(void)
 {
 	return cartridge;
@@ -595,7 +606,7 @@ uint8_t MemoryMap::is_interrupt_triggered(void)
 	return ((IE & io[IF]) != 0x00);
 }
 
-uint8_t MemoryMap::is_interrupt_enabled(interrupt_t *interrupt)
+uint8_t MemoryMap::is_interrupt_enabled(const interrupt_t *interrupt)
 {
 	return ((IE & interrupt->mask) == interrupt->mask);
 }
@@ -611,7 +622,7 @@ uint8_t MemoryMap::is_interrupt_enabled(interrupt_t *interrupt)
 	this corresponds with the initialized mask values in interrupt.cpp
 	page 39-40
 */
-uint8_t MemoryMap::is_interrupt_set(interrupt_t *interrupt)
+uint8_t MemoryMap::is_interrupt_set(const interrupt_t *interrupt)
 {
 	return ((io[IF] & interrupt->mask) == interrupt->mask);
 }
@@ -619,7 +630,7 @@ uint8_t MemoryMap::is_interrupt_set(interrupt_t *interrupt)
 /*
 	or equals the current interrupt flags with a given interrupt's mask
 */
-void MemoryMap::set_interrupt(interrupt_t *interrupt)
+void MemoryMap::set_interrupt(const interrupt_t *interrupt)
 {
 	io[IF] |= interrupt->mask;
 }
@@ -633,12 +644,12 @@ void MemoryMap::set_interrupt(interrupt_t *interrupt)
 	and equals-ing with that inverse mask gives you 1's in anything that was already a 1 (leaving
 	all other enabled interrupts alone), but clearing the timer bit of the value
 */
-void MemoryMap::disable_interrupt(interrupt_t *interrupt)
+void MemoryMap::disable_interrupt(const interrupt_t *interrupt)
 {
 	io[IF] &= ~interrupt->mask;
 }
 
-uint8_t MemoryMap::is_lcd_interrupt_enabled(lcd_interrupt_t *interrupt)
+uint8_t MemoryMap::is_lcd_interrupt_enabled(const lcd_interrupt_t *interrupt)
 {
 	return ((io[STAT] & interrupt->mask) == interrupt->mask);
 }
